@@ -1,0 +1,61 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+}
+
+#map-area {
+    width: 100%;
+    height: 100%;
+}
+
+#map-stats {
+    top: 10px;
+    left: 10px;
+    position: absolute;
+    background-color: #0009;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+#map-stats div {
+    color: #FFF;
+    font-size: 12px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.row {
+    display: block;
+}
+
+.cell {
+    display: inline-block;
+    width: calc(100%/110);
+    height: calc(100%/60);
+    border-top: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-collapse: separate;
+}
+
+.water {
+    background-color: rgb(126, 174, 236);
+}
+
+.land {
+    background-color: green;
+}
+
+.mountain {
+    background-color: grey;
+}
+
+.hill {
+    background-color: rgb(163, 135, 82);
+}
+
+.red {
+    background-color: red;
+}
