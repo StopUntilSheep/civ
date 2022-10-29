@@ -1,3 +1,7 @@
+
+var startPoint = [];
+var endPoint = [];
+
 const area = (() => {
 
     var _this = [];
@@ -5,6 +9,7 @@ const area = (() => {
     var currentCoords = [];
     var chunkCanvas = [];
     var chunkLength = 0;
+
 
     // determine size of area
     const width = 110;
@@ -43,7 +48,11 @@ const area = (() => {
         3: " mountain"
     }
 
-    const landMass = mapTypes["landMass"]["continents"];
+    const landMass = mapTypes["landMass"]["pangaea"];
+
+    // html elements
+    const htmlElemMap = document.getElementById('map-area');
+    const htmlElemStats = document.getElementById('map-stats');
 
 
 
@@ -214,7 +223,8 @@ const area = (() => {
             flow(x, y);
         }
 
-        const floodFillMap = _this.slice();
+        //const floodFillMap = _this.slice();
+        const floodFillMap = JSON.parse(JSON.stringify(_this));     // Using this method because slice() doesn't value copy objects
 
         for (var i = 0; i < height - 1; i++) {
             for (var j = 0; j < width - 1; j++) {
@@ -226,6 +236,13 @@ const area = (() => {
         }
 
         return theCount;
+
+    }
+
+
+    const makeCopy = () => {
+
+        return JSON.parse(JSON.stringify(_this));
 
     }
 
@@ -282,12 +299,11 @@ const area = (() => {
 
         // show map for testing :)
         let code = "";
-        const htmlElemMap = document.getElementById('map-area');
 
         for (var i = 0; i < _this.length; i++) {
             code += "<div class='row'>";
             for (var j = 0; j < _this[i].length; j++) {
-                code += "<div class='cell" + terrainCSS[_this[i][j]["terrain"]] + "'></div>";
+                code += "<div data-x='" + j + "' data-y='" + i + "' class='cell" + terrainCSS[_this[i][j]["terrain"]] + "'></div>";
             }
             code += "</div>";
         }
@@ -301,7 +317,6 @@ const area = (() => {
 
         // show stats for testing :)
         let code = "";
-        const htmlElemStats = document.getElementById('map-stats');
 
         code += "<div>Total Tiles: " + width * height + "</div>";
         code += "<div>Total Land Tiles: " + countCellsWithPropertyValue("terrain", 1) + "</div>";
@@ -309,6 +324,37 @@ const area = (() => {
 
         htmlElemStats.innerHTML = code;
 
+    }
+
+
+    const addEventListeners = () => {
+
+        var landCells = document.querySelectorAll(".land, .mountain, .hill");
+
+        landCells.forEach((elem) => {
+            elem.addEventListener("click", () => {
+                myAssCunt(elem)
+            });
+        });
+
+    };
+
+
+    const myAssCunt = (elem) => {
+        //console.log(elem);
+        //if(startPoint.length === 0){ console.log(elem.getAttribute("data-x") + ", " + elem.getAttribute("data-y")); }
+        if (startPoint.length === 0) {
+            startPoint = [parseInt(elem.getAttribute("data-y")), parseInt(elem.getAttribute("data-x"))];
+        }
+        else if (endPoint.length === 0) {
+            endPoint = [parseInt(elem.getAttribute("data-y")), parseInt(elem.getAttribute("data-x"))];
+            pathfinder.init(startPoint, endPoint);
+        }
+        else {
+            startPoint.length = endPoint.length = 0;
+        }
+        /*         console.log(startPoint);
+                console.log(endPoint); */
     }
 
 
@@ -337,16 +383,253 @@ const area = (() => {
         cleanUpNarrowPassages,
         cleanUpOverInflatedTerrain,
         countLandmasses,
+        makeCopy,
         randomCoords,
         randomLength,
         updateCellProperty,
         countCellsWithPropertyValue,
         displayHTML,
-        displayStats
+        displayStats,
+        addEventListeners
     });
 
 }
 )()
+
+
+
+
+const pathfinder = (() => {
+
+
+    let map = [];
+    let directions = [];
+    //let startPoint = [];
+    //let endPoint = [];
+
+
+    /* 
+        // CREATE THE MAP
+        for (var i = 0; i < mapPrep.length; i++) {
+            var row = [];
+            for (var j = 0; j < mapPrep[i].length; j++) {
+                var obj = new Object();
+                obj.terrain = mapPrep[i][j];
+                obj.checked = false;
+                i === startPoint[0] && j === startPoint[1] ? obj.active = true : obj.active = false;
+                obj.nodeList = [[i, j]];
+                row.push(obj);
+            }
+            map.push(row);
+        }
+     */
+
+
+    const findRoute = () => {
+
+        // Get list of currently 'active' nodes
+        var activeNodes = [];
+        for (var i = 0; i < map.length; i++) {
+            for (var j = 0; j < map[i].length; j++) {
+                if (map[i][j].active === true) {
+                    activeNodes.push([i, j]);
+                }
+            }
+        }
+
+
+        // activeNodes ARRAY ORDERED BY 'NEAREST TO ENDPOINT' ---> 'FURTHEST FROM ENDPOINT'
+        activeNodes.sort((a, b) => {
+            if ((a[0] - endPoint[0]) ** 2 + (a[1] - endPoint[1]) ** 2 > (b[0] - endPoint[0]) ** 2 + (b[1] - endPoint[1]) ** 2) return 1;
+            if ((a[0] - endPoint[0]) ** 2 + (a[1] - endPoint[1]) ** 2 < (b[0] - endPoint[0]) ** 2 + (b[1] - endPoint[1]) ** 2) return -1;
+            return 0;
+        })
+
+
+        // Loop through activeNodes
+        for (var k = 0; k < activeNodes.length; k++) {
+
+            //console.log(activeNodes);
+
+            // If the current activeNode matches the coords of the endPoint...
+            if (activeNodes[k][0] === endPoint[0] && activeNodes[k][1] === endPoint[1]) {
+                console.log("FOUND ROUTE!");
+                //console.log(map[activeNodes[k][0]][activeNodes[k][1]]["nodeList"]);
+                return true;
+            }
+
+            // If not..
+            else {
+
+                var x = activeNodes[k][1];
+                var y = activeNodes[k][0];
+
+                map[y][x]["checked"] = true;       // Set map node 'checked' to true
+
+                for (var l = 0; l < directions.length; l++) {
+
+                    // Move coords to next node
+                    x += directions[l][1];
+                    y += directions[l][0];
+
+                    if (coordsAreWithinMapBoundaries(map, x, y) && terrainIsPassable(map, x, y) && nodeIsNotCheckedOrActive(map, x, y)) {
+                        map[y][x]["active"] = true;     // Set node to 'active'
+                        map[y][x]["nodeList"].unshift(...map[activeNodes[k][0]][activeNodes[k][1]]["nodeList"]);       // Add list of visited nodes to start of node's nodeList
+                    }
+
+                    // Reset coords back to previous node
+                    x -= directions[l][1];
+                    y -= directions[l][0];
+
+                }
+
+                map[y][x]["active"] = false;       // Set map node 'checked' to true
+
+            }
+
+        }
+
+
+        return findRoute();
+
+
+    }
+
+
+
+    const init = (startPoint, endPoint) => {
+
+
+
+        map = structuredClone(area._this);
+
+
+
+        for (var i = 0; i < map.length; i++) {
+            for (var j = 0; j < map[i].length; j++) {
+                map[i][j]["nodeList"] = [[j, i]];
+            }
+        }
+
+        //directions = [[-1, 0], [0, 1], [1, 0], [0, -1]];     // up, right, down, left
+        directions = [[-1, -1], [-1, 1], [1, 1], [1, -1], [-1, 0], [0, 1], [1, 0], [0, -1]];     // up-left, up-right, down-right, down-left, up, right, down, left
+
+        console.log(map);
+
+        //startPoint = [47, 25];
+        //endPoint = [16, 91];
+
+        map[startPoint[0]][startPoint[1]]["active"] = true;
+        map[startPoint[0]][startPoint[1]]["start"] = true;
+        map[endPoint[0]][endPoint[1]]["end"] = true;
+
+
+
+
+        if (!findRoute()) {
+            console.log("Can't find a route, chief!")
+
+            // show map for testing :)
+            let code = "";
+            const htmlElemMap = document.getElementById('map-area');
+
+            for (var i = 0; i < map.length; i++) {
+                code += "<div class='row'>";
+                for (var j = 0; j < map[i].length; j++) {
+                    code += "<div class='cell";
+                    if (map[i][j]["terrain"] === 3) { code += " mountain"; }
+                    if (map[i][j]["terrain"] === 2) { code += " hill"; }
+                    if (map[i][j]["terrain"] === 1) { code += " land"; }
+                    if (map[i][j]["terrain"] === 0) { code += " water"; }
+                    code += "'></div>";
+                }
+                code += "</div>";
+            }
+
+            htmlElemMap.innerHTML = code;
+
+        }
+        else {
+
+            // show map for testing :)
+            let code = "";
+            const htmlElemMap = document.getElementById('map-area');
+
+            for (var i = 0; i < map.length; i++) {
+                code += "<div class='row'>";
+                for (var j = 0; j < map[i].length; j++) {
+                    code += "<div class='cell";
+                    if (map[i][j]["terrain"] === 3) { code += " mountain"; }
+                    if (map[i][j]["terrain"] === 2) { code += " hill"; }
+                    if (map[i][j]["terrain"] === 1) { code += " land"; }
+                    if (map[i][j]["terrain"] === 0) { code += " water"; }
+                    if (map[i][j]["start"] === true) { code += " start"; }
+                    if (map[i][j]["end"] === true) { code += " end"; }
+                    if (arrayIsInArray(map[endPoint[0]][endPoint[1]]["nodeList"], [j, i])) { code += " red"; }
+                    code += "'></div>";
+                }
+                code += "</div>";
+            }
+
+            htmlElemMap.innerHTML = code;
+
+        };
+
+    }
+
+
+
+
+    // Check that a node exists
+    const coordsAreWithinMapBoundaries = (map, x, y) => {
+        if (x < 0 || x >= map[0].length || y < 0 || y >= map.length) { return false; }
+        else { return true; }
+    }
+
+    // Check that the node terrain is one of the permitted types
+    const terrainIsPassable = (map, x, y) => {
+        if (map[y][x]["terrain"] === 0) { return false; }
+        else { return true; }
+    }
+
+    // Check that the node is not already 'checked' or 'active'
+    const nodeIsNotCheckedOrActive = (map, x, y) => {
+        if (map[y][x]["checked"] === true || map[y][x]["active"] === true) { return false; }
+        else { return true; }
+    }
+
+    // Check to see if an array is in an array of arrays
+    const arrayIsInArray = (parent, child) => {
+        var i, j, current;
+        for (i = 0; i < parent.length; ++i) {
+            if (child.length === parent[i].length) {
+                current = parent[i];
+                for (j = 0; j < child.length && child[j] === current[j]; ++j);
+                if (j === child.length)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    return ({
+        coordsAreWithinMapBoundaries,
+        terrainIsPassable,
+        nodeIsNotCheckedOrActive,
+        arrayIsInArray,
+        init
+    });
+
+
+
+
+
+
+})()
+
+
+
+
 
 
 
@@ -361,7 +644,10 @@ window.onload = () => {
 
     area.displayHTML();
     area.displayStats();
+    area.addEventListeners();
 
     console.log(area);
+
+    //pathfinder.init();
 
 }

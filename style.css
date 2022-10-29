@@ -32,12 +32,28 @@ body {
 }
 
 .cell {
+    position: relative;
     display: inline-block;
     width: calc(100%/110);
     height: calc(100%/60);
     border-top: 1px solid #CCC;
     border-left: 1px solid #CCC;
     border-collapse: separate;
+}
+
+.cell:not(.water):hover {
+    cursor: pointer;
+}
+
+.cell:not(.water)::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.cell:not(.water):hover::before {
+    background-color: #FFF8;
 }
 
 .water {
@@ -58,4 +74,29 @@ body {
 
 .red {
     background-color: red;
+}
+
+.start, .end {
+    animation: flashbg .5s infinite;
+}
+
+@keyframes flashbg {
+    from {
+        background-color: red;
+    }
+
+    to {
+        background-color: white;
+    }
+}
+
+
+.routecell {
+    display: inline-block;
+    text-align: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #999;
+    border-collapse: collapse;
+    font: 32px Arial;
 }
