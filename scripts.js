@@ -351,7 +351,7 @@ const area = (() => {
             pathfinder.init(startPoint, endPoint);
         }
         else {
-            startPoint.length = endPoint.length = 0;
+            reload();
         }
         /*         console.log(startPoint);
                 console.log(endPoint); */
