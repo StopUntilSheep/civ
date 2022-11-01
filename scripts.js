@@ -427,6 +427,41 @@ const pathfinder = (() => {
 
     const findRoute = () => {
 
+        let routeCount = 0;
+        let successfulRoutes = [];
+
+
+
+
+
+        // NEW WAYYYY!!!
+
+        // Get list of currently 'active' nodes
+        var activeNodes = [];
+        for (var i = 0; i < map.length; i++) {
+            for (var j = 0; j < map[i].length; j++) {
+                if (map[i][j].active === true && map[i][j].cardinal === true) {
+                    activeNodes.unshift([i, j]);
+                }
+                if (map[i][j].active === true && map[i][j].cardinal === false) {
+                    activeNodes.push([i, j]);
+                }
+            }
+        }
+
+/*         for (var i = 0; i < map.length; i++) {
+            for (var j = 0; j < map[i].length; j++) {
+                if (map[i][j].active === true && map[i][j].cardinal === false) {
+                    activeNodes.push([i, j]);
+                }
+            }
+        } */
+
+
+
+
+        // OLD WAYY!!!
+/*         
         // Get list of currently 'active' nodes
         var activeNodes = [];
         for (var i = 0; i < map.length; i++) {
@@ -437,24 +472,25 @@ const pathfinder = (() => {
             }
         }
 
-
         // activeNodes ARRAY ORDERED BY 'NEAREST TO ENDPOINT' ---> 'FURTHEST FROM ENDPOINT'
         activeNodes.sort((a, b) => {
             if ((a[0] - endPoint[0]) ** 2 + (a[1] - endPoint[1]) ** 2 > (b[0] - endPoint[0]) ** 2 + (b[1] - endPoint[1]) ** 2) return 1;
             if ((a[0] - endPoint[0]) ** 2 + (a[1] - endPoint[1]) ** 2 < (b[0] - endPoint[0]) ** 2 + (b[1] - endPoint[1]) ** 2) return -1;
             return 0;
-        })
+        }) */
+
+
+
+
+
 
 
         // Loop through activeNodes
         for (var k = 0; k < activeNodes.length; k++) {
 
-            //console.log(activeNodes);
-
             // If the current activeNode matches the coords of the endPoint...
             if (activeNodes[k][0] === endPoint[0] && activeNodes[k][1] === endPoint[1]) {
-                console.log("FOUND ROUTE!");
-                //console.log(map[activeNodes[k][0]][activeNodes[k][1]]["nodeList"]);
+                console.log("found route!");
                 return true;
             }
 
@@ -473,6 +509,8 @@ const pathfinder = (() => {
                     y += directions[l][0];
 
                     if (coordsAreWithinMapBoundaries(map, x, y) && terrainIsPassable(map, x, y) && nodeIsNotCheckedOrActive(map, x, y)) {
+                        if (Math.abs(directions[l][0] + directions[l][1]) === 1) { map[y][x]["cardinal"] = true; }     // Cardinal direction
+                        else { map[y][x]["cardinal"] = false; }
                         map[y][x]["active"] = true;     // Set node to 'active'
                         map[y][x]["nodeList"].unshift(...map[activeNodes[k][0]][activeNodes[k][1]]["nodeList"]);       // Add list of visited nodes to start of node's nodeList
                     }
@@ -489,9 +527,7 @@ const pathfinder = (() => {
 
         }
 
-
         return findRoute();
-
 
     }
 
@@ -520,6 +556,7 @@ const pathfinder = (() => {
         //endPoint = [16, 91];
 
         map[startPoint[0]][startPoint[1]]["active"] = true;
+        map[startPoint[0]][startPoint[1]]["cardinal"] = true;
         map[startPoint[0]][startPoint[1]]["start"] = true;
         map[endPoint[0]][endPoint[1]]["end"] = true;
 
@@ -598,6 +635,12 @@ const pathfinder = (() => {
         else { return true; }
     }
 
+    // Check if two nodes are adjacent
+    const nodesAreAdjacent = (node1, node2) => {
+        if (Math.abs(node1[0] - node2[0]) > 1 || Math.abs(node1[1] - node2[1]) > 1) { return false; }
+        else { return true; }
+    }
+
     // Check to see if an array is in an array of arrays
     const arrayIsInArray = (parent, child) => {
         var i, j, current;
@@ -616,6 +659,7 @@ const pathfinder = (() => {
         coordsAreWithinMapBoundaries,
         terrainIsPassable,
         nodeIsNotCheckedOrActive,
+        nodesAreAdjacent,
         arrayIsInArray,
         init
     });
